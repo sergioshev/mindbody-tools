@@ -78,17 +78,18 @@ getClientVisitsForWeek() {
     -H "SiteId: $site_id" | parse_visits
 }
 
+
 function should_skip_class() {
   classname=$1
   vertical=$2
   plan=$3
 
   if echo $classname | grep -q -i $vertical ; then
-    [ "$vertical" == "FIT" ] && return 0
-
-    echo $classname | grep -q -i $plan && return 0 || return 1
+    return 1
+    # in case we should match using plan somehow
+    #echo $classname | grep -q -i $plan && return 0 || return 1
   fi
-  return 1
+  return 0
 }
 
 token=$(getMbToken)
@@ -120,6 +121,8 @@ cat /tmp/sin-schedule | while read uid created vertical plan id ; do
   while read classname starttime endtime ; do
     should_skip_class "$classname" $vertical $plan && continue
 
+    echo "Match found $vertical, $plan in [$classname]" > /dev/stderr
+
     classname=$(echo $classname | tr ' ' '_' | tr '-' '_')
 
     schedule_item_raw=$(date -d "$starttime" +%a,%I:%M,%p)
@@ -136,8 +139,7 @@ cat /tmp/sin-schedule | while read uid created vertical plan id ; do
 
     # EXAMPLE: [{"shortDayName":"Tue","hourWithPeriod":"5PM"},{"shortDayName":"Fri","hourWithPeriod":"5PM"}]
 
-    schedule="${schedule}${schedule:+","}{\"shortDayName\":\"$short_day_name\",\"hourWithPeriod\":\"${hour_period}${min_period}${ampm}]\"}"
-
+    schedule="${schedule}${schedule:+","}{\"shortDayName\":\"$short_day_name\",\"hourWithPeriod\":\"${hour_period}${min_period}${ampm}\"}"]
   done < <(getClientVisitsForWeek $mid "$created")
 
   [ $schedule ] && echo -e "$id\t$uid\t$mid\t[${schedule}]\t$vertical\t$plan"
