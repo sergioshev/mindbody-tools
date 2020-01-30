@@ -2,7 +2,7 @@
 
 usage() {
 cat <<FFAA
-  pecialDiff.sh -c current_csv -p previous_csv
+  specialDiff.sh -c current_csv -p previous_csv
  
   -c current_csv: the most recent csv downloaded
   -p previous_csv: the oldest one
